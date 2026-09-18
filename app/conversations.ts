@@ -16,7 +16,7 @@ export const characters: Record<Character, { name: string; avatar: string; greet
   uncle: { name: 'Uncle · Unsolicited advice', avatar: '🕶️', greeting: 'Beta degree konsi kar rahe ho? Aur is mein scope hai?', replies: [
     ['Bas guzara hai', 'Guzara? Hamare zamanay mein is umar mein do bachay aur plot hota tha.'],
     ['Theek hai uncle', 'Theek toh hai. Lekin government job ka socha hai? Pension hoti hai, beta.'],
-    ['Aap rishta de do', 'Rishta? Pehle salary batao. Main bas general knowledge ke liye pooch raha hoon.'],
+    ['Aap rishta de do', 'Hain?! Main salary pooch raha hoon aur tumhein rishta chahiye?! Pehle apne pairon pe kharay ho jao. Badtameez!'],
     ['Freelancing karta hoon', 'Achha, matlab abhi job nahi mili. Koi baat nahi, mehnat karo.'],
   ] },
   aunty: { name: 'Rishta aunty · Always online', avatar: '👩🏽‍🦱', greeting: 'Beta meri niece bhi CS kar rahi hai… bas casually bata rahi hoon.', replies: [
