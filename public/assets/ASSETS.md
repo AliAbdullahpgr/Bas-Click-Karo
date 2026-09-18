@@ -32,3 +32,9 @@ Background extraction edit. Preserve exactly this tabby cat pose, fur, face, ent
 
 ### chair-real.png
 Photorealistic isolated asset of one weathered red molded plastic Pakistani outdoor chair, recognizable cheap monobloc chair with slotted back and armrests, whole chair including four legs fully visible, three-quarter view at eye level, warm sunset lighting, realistic scratches and subtle dust, no text. Genuine transparent PNG alpha background, no floor, no setting, no backdrop, no checkerboard pattern. Centered full chair for draggable prop in a Lahore street website.
+
+
+### cricket-bat-real.png
+Built-in GPT image tool, generated as a transparent PNG and used for the street cricket prop.
+
+Prompt: Photorealistic isolated Pakistani gully cricket bat, single full wooden willow cricket bat with a worn pale honey blade, subtle scuff marks from street cricket, black rubber wrapped handle, small green geometric sticker with no words, whole bat from handle to toe entirely in frame, upright tilted just 12 degrees, front blade three-quarter angle, warm late-afternoon lighting. Transparent PNG with true alpha background, no ground, no shadow plane, no colored backdrop, no checkerboard, no ball, no hands, no other objects. Clean realistic photographic game prop for layering over a Pakistani street webpage. Leave a small transparent margin, keep bat large in frame.

@@ -1,65 +1,72 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 
-// Original procedural phrases, not recordings or arrangements of existing songs.
+type Song = { name: string; url: string };
+const suppliedSong: Song = { name: 'Farak — Taare', url: '/audio/farak-taare.mp3' };
 export function useStreetAudio(muted: boolean, powerOff: boolean) {
   const [playing, setPlaying] = useState(false);
+  const [dholPlaying, setDholPlaying] = useState(false);
   const [track, setTrack] = useState(0);
-  const [volume, setVolume] = useState(.3);
-  const context = useRef<AudioContext | null>(null);
-  const master = useRef<GainNode | null>(null);
-  const names = ['Dhaba groove', 'Shaadi dhol', 'Raat ki chai'];
-  function start() {
-    if (!context.current) {
-      context.current = new AudioContext();
-      master.current = context.current.createGain();
-      master.current.connect(context.current.destination);
-    }
-    void context.current.resume();
-    setPlaying(true);
+  const [volume, setVolume] = useState(.12);
+  const [songs, setSongs] = useState<Song[]>([suppliedSong]);
+  const [position, setPosition] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [error, setError] = useState('');
+  const fileAudio = useRef<HTMLAudioElement | null>(null);
+  const dholAudio = useRef<HTMLAudioElement | null>(null);
+  const objectUrls = useRef<string[]>([]);
+  const names = songs.map(song=>song.name);
+  function start(){setError('');setDholPlaying(false);setPlaying(true);}
+  function toggleDhol(){
+    setError('');setPlaying(false);
+    if(!dholPlaying&&dholAudio.current)dholAudio.current.currentTime=0;
+    setDholPlaying(value=>!value);
   }
-  useEffect(() => {
-    if (master.current && context.current) master.current.gain.setTargetAtTime(muted || powerOff ? 0 : volume * .6, context.current.currentTime, .12);
-  }, [volume, muted, powerOff, playing]);
-  useEffect(() => {
-    const ctx = context.current, output = master.current;
-    if (!playing || !ctx || !output || muted || powerOff) return;
-    let step = 0, next = ctx.currentTime + .05;
-    const beat = 60 / [98, 118, 76][track] / 4;
-    const notes = [[0, 3, 5, 7, 10, 7, 5, 3], [0, 5, 7, 10, 12, 10, 7, 5], [0, 2, 5, 7, 9, 7, 5, 2]][track];
-    function tone(at: number, frequency: number, duration: number, amp: number, type: OscillatorType = 'sine', end?: number) {
-      const osc = ctx!.createOscillator(), gain = ctx!.createGain();
-      osc.type = type; osc.frequency.setValueAtTime(frequency, at);
-      if (end) osc.frequency.exponentialRampToValueAtTime(end, at + duration * .7);
-      gain.gain.setValueAtTime(0, at); gain.gain.linearRampToValueAtTime(amp, at + .009); gain.gain.exponentialRampToValueAtTime(.0001, at + duration);
-      osc.connect(gain); gain.connect(output!); osc.start(at); osc.stop(at + duration + .02);
-      osc.onended = () => { osc.disconnect(); gain.disconnect(); };
-    }
-    function tap(at: number, amp: number) {
-      const buffer = ctx!.createBuffer(1, ctx!.sampleRate * .08, ctx!.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (data.length * .15));
-      const source = ctx!.createBufferSource(), filter = ctx!.createBiquadFilter(), gain = ctx!.createGain();
-      source.buffer = buffer; filter.type = 'bandpass'; filter.frequency.value = 2200; gain.gain.value = amp;
-      source.connect(filter); filter.connect(gain); gain.connect(output!); source.start(at);
-      source.onended = () => { source.disconnect(); filter.disconnect(); gain.disconnect(); };
-    }
-    const timer = setInterval(() => {
-      while (next < ctx.currentTime + .15) {
-        const s = step % 16;
-        if ([0, 6, 8, 14].includes(s)) { tone(next, 145, .24, .8, 'sine', 54); tone(next, 230, .08, .12); }
-        if ([3, 4, 7, 11, 12, 15].includes(s)) { tone(next, 390, .095, .24, 'triangle', 170); tap(next, .22); }
-        if (s % 2 === 0) tap(next, .07);
-        if (step % 4 === 0) {
-          const frequency = 293.66 * Math.pow(2, notes[Math.floor(step / 4) % 8] / 12);
-          tone(next, frequency, beat * 3.4, .19); tone(next, frequency * 2, beat * 2.5, .025);
-        }
-        if (step % 8 === 0) tone(next, 146.83, beat * 7, .045, 'triangle');
-        next += beat; step++;
-      }
-    }, 40);
-    return () => clearInterval(timer);
-  }, [playing, track, muted, powerOff]);
-  useEffect(() => () => { void context.current?.close(); }, []);
-  return { playing, start, toggle: () => playing ? setPlaying(false) : start(), track, nextTrack: () => setTrack(t => (t + 1) % 3), volume, setVolume, names };
+  useEffect(()=>{
+    const song=songs[track];
+    if(!song)return;
+    const player=fileAudio.current || (fileAudio.current=new Audio());
+    if(player.getAttribute('src')!==song.url){player.src=song.url;setPosition(0);setDuration(0);}
+    player.volume=volume;
+    player.muted=muted;
+    player.onloadedmetadata=()=>setDuration(Number.isFinite(player.duration)?player.duration:0);
+    player.ontimeupdate=()=>setPosition(player.currentTime);
+    player.onended=()=>{
+      if(track+1<songs.length)setTrack(track+1);
+      else setPlaying(false);
+    };
+    player.onerror=()=>{setError('Yeh file play nahi ho rahi. MP3, WAV ya M4A try karein.');setPlaying(false);};
+    if(playing&&!powerOff)void player.play().catch(()=>{setError('Play dabao to start this song.');setPlaying(false);});
+    else player.pause();
+    return()=>player.pause();
+  },[track,songs,playing,volume,muted,powerOff]);
+  useEffect(()=>{
+    if(!dholPlaying){dholAudio.current?.pause();return;}
+    const player=dholAudio.current || (dholAudio.current=new Audio('/audio/shaadi-dhol.mp3'));
+    player.volume=volume;
+    player.muted=muted;
+    const stop=()=>{player.pause();setDholPlaying(false);};
+    player.onended=stop;
+    player.ontimeupdate=()=>{if(player.currentTime>=15)stop();};
+    player.onerror=()=>{stop();setError('Shaadi sound load nahi ho saka.');};
+    if(!powerOff)void player.play().catch(stop);
+    else player.pause();
+    return()=>player.pause();
+  },[dholPlaying,volume,muted,powerOff]);
+  function addSongs(files: FileList | null){
+    if(!files)return;
+    const additions=Array.from(files).filter(file=>file.type.startsWith('audio/')||/\.(mp3|wav|ogg|m4a|aac|flac)$/i.test(file.name)).map(file=>{
+      const url=URL.createObjectURL(file);objectUrls.current.push(url);return {name:file.name.replace(/\.[^.]+$/,''),url};
+    });
+    if(!additions.length){setError('Audio files select karein: MP3, WAV ya M4A.');return;}
+    setSongs(current=>[...current,...additions]);setTrack(songs.length);setPlaying(false);setDholPlaying(false);setError('');
+  }
+  useEffect(()=>()=>{fileAudio.current?.pause();dholAudio.current?.pause();objectUrls.current.forEach(URL.revokeObjectURL);},[]);
+  return {
+    playing,dholPlaying,toggleDhol,start,stop:()=>setPlaying(false),addSongs,position,duration,error,
+    hasFileTrack:true,seek:(time:number)=>{if(fileAudio.current){fileAudio.current.currentTime=time;setPosition(time);}},
+    previousTrack:()=>setTrack(t=>(t-1+names.length)%names.length),
+    playTrack:(index:number)=>{setTrack(index);start();},
+    toggle:()=>playing?setPlaying(false):start(),track,nextTrack:()=>setTrack(t=>(t+1)%names.length),volume,setVolume,names,
+  };
 }
