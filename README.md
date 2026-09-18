@@ -17,7 +17,7 @@ Open http://localhost:3000. Run npm run build to export the site into out/, then
 - Chai greetings and order replies rotate independently. Declining chai or asking for credit does not pour a cup. The fifth actual cup adds the acidity joke.
 - Clicking uncle plays a short laugh. His answers escalate; asking for a rishta produces an angry reaction.
 - Mohalla Gossip is a WhatsApp-style group with Nida aunty, Bilal, and Ahmed chacha, with multiple conversations per topic.
-- The shaadi tent plays the supplied Bombay Nights clip for up to 15 seconds, without opening chat.
+- The shaadi tent plays the supplied Bombay Nights clip for up to 6 seconds, without opening chat.
 - The Good Music box opens a player containing Farak — Taare. It has play/pause, seeking, quieter default volume, and a local song picker. Selected local files stay on the device and are not retained after refresh.
 - The cat plays a meow when clicked and answers both preset and typed messages only with meows.
 - Cricket uses a GPT-generated bat and ends automatically after 12 seconds. Stop, clicking the bat again, or Escape also ends it.

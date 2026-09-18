@@ -13,7 +13,7 @@ The last 0.2 seconds fade out. Repeated clicks replace the same sound instead of
 
 ## Music
 
-- shaadi-dhol.mp3: grumpynora-bombay-nights-15-sec-edit-552626.mp3, supplied from D:/Downloads. Plays only from the shaadi area, capped at 15 seconds.
+- shaadi-dhol.mp3: grumpynora-bombay-nights-15-sec-edit-552626.mp3, supplied from D:/Downloads. Plays only from the shaadi area, capped at 6 seconds.
 - farak-taare.mp3: Farak - Taare  Official Music Video  - Farak.mp3, supplied from D:/Downloads. The only bundled song in the music player.
 
 The previous procedural demo tracks were removed. Music defaults to 12% volume. The song and shaadi clip do not play over one another.

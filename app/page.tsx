@@ -101,7 +101,7 @@ export default function Home() {
   const count = () => { setClicks(c=>c+1); if(clicks>=8 && !quizPrompted.current && quiz===-1){quizPrompted.current=true;say("Asli Pakistani? Try the Pakistani test when you’re ready. 🇵🇰");} };
   const sound = (kind='horn') => { if(muted)return; try { const ctx=audio.current || (audio.current=new AudioContext()); void ctx.resume(); [0,.18].forEach((delay,i)=> { const osc=ctx.createOscillator(); const gain=ctx.createGain(); osc.type=kind==='chai'?'sine':'sawtooth'; osc.frequency.value=kind==='chai'?750+i*200:330+i*110; gain.gain.setValueAtTime(0,ctx.currentTime+delay); gain.gain.linearRampToValueAtTime(.025,ctx.currentTime+delay+.02); gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+delay+.17); osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime+delay);osc.stop(ctx.currentTime+delay+.2); }); } catch {} };
   function openChat(who: Character, line?: string) {
-    setAunty(false);setMusicOpen(false);
+    setAunty(false);closePlayer();
     if(who==='gossip'){setChat(null);setGossipOpen(true);return;}
     setGossipOpen(false);setChat(who);setMessages([{mine:false,text:line || characters[who].greeting}]);
   }
@@ -134,15 +134,15 @@ export default function Home() {
     if(who==='driver')ride();
     if(who==='cat'){setCatHop(true);later(()=>setCatHop(false),1100);playEffect('meow');}
     if(who==='uncle'){
-      setUncle(n=>n+1);setUncleAngry(index===2);setUncleReaction(response);
+      setUncleAngry(index===2);setUncleReaction(response);
       if(uncleReactionTimer.current)clearTimeout(uncleReactionTimer.current);
       uncleReactionTimer.current=setTimeout(()=>{setUncleAngry(false);setUncleReaction('');},6500);
-      if(uncle>=3 && index!==2){setBoss(true);setBossHealth(3);}
+
     }
   }
   function blackout(){if(dark)return;count();setBat(false);setChaos(false);setDark(true);later(()=>{setDark(false);say('Bijli aa gayi! 🎉 Ab pole se door rehna.');sound('chai');},5000);}
   function shaadi(){
-    count();setChat(null);setGossipOpen(false);setMusicOpen(false);setAunty(false);
+    count();setChat(null);setGossipOpen(false);closePlayer();setAunty(false);
     const wasPlaying=music.dholPlaying;setMuted(false);music.toggleDhol();
     say(wasPlaying?'Dhol band. Ab biryani ki line mein lag jao.':'Shaadi season: dhol ON! Bhangra banta hai. 🥁');
   }
@@ -152,7 +152,7 @@ export default function Home() {
     cricketStartButton.current?.focus();
   }
   function startCricket(){
-    count();setChat(null);setGossipOpen(false);setMusicOpen(false);setChaos(false);setHits(0);cricketHits.current=0;
+    count();setChat(null);setGossipOpen(false);closePlayer();setChaos(false);setHits(0);cricketHits.current=0;
     setCricketSeconds(12);cricketDeadline.current=Date.now()+12000;setBat(true);
     say('12 seconds ka over! Emojis ko hit karo. Escape se band. 🏏');
   }
@@ -178,6 +178,7 @@ export default function Home() {
     setMessages(current=>[...current,{mine:true,text},{mine:false,text:answer}].slice(-8));
     setCatMessage('');playEffect('meow');
   }
+  function closePlayer(){music.stop();setMusicOpen(false);}
   function openPlayer(){setChat(null);setGossipOpen(false);setAunty(false);setMusicOpen(true);}
   function answer(){if(selected===null)return;setCorrect(c=>c+(selected===questions[quiz].correct?1:0));setSelected(null);setQuiz(q=>q+1);}
   const score=correct===3?94:correct===2?81:correct===1?62:38;
@@ -192,7 +193,7 @@ export default function Home() {
       <button className={"chai-prop "+(steam?"pouring":"")} aria-label="Sip karak chai" onClick={sipTea}><img src="/assets/chai-real.png" alt="Glass of karak chai" draggable={false}/>{steam&&<span className="cup-steam" aria-hidden="true"><i/><i/><i/></span>}</button>
       <div key={rideId} className={"rickshaw-prop "+(drive?"on-the-road":"")}><button aria-label="Ride the rickshaw" onClick={rickshaw}><img src="/assets/rickshaw-real.png" alt="Realistic truck-art rickshaw with driver" draggable={false}/></button>{drive&&<div className="exhaust" aria-hidden="true">{Array.from({length:7},(_,i)=><i key={i} style={{animationDelay:(i*.16)+"s"}}/>)}</div>}</div>
       <button className={"hotspot uncle "+(uncleAngry?"uncle-angry":"")} aria-label="Talk to uncle" onClick={askUncle}><span className="scene-label">{uncleAngry?"😡 Beta, tameez se!":uncleQuestion}</span>{uncleAngry&&<span className="anger-mark" aria-hidden="true">💢</span>}</button>
-      {uncleReaction&&<div className={"uncle-reaction "+(uncleAngry?"angry":"")} role="status">{uncleAngry?"😡 ":"🕶 "}{uncleReaction}</div>}
+      {uncleReaction&&chat!=="uncle"&&<div className={"uncle-reaction "+(uncleAngry?"angry":"")} role="status">{uncleAngry?"😡 ":"🕶 "}{uncleReaction}</div>}
       <button className="hotspot pole" aria-label="Touch electricity pole" onClick={blackout}><span className="scene-label">⚡ Haath mat lagana</span></button>
       <button ref={cricketStartButton} className="hotspot cricket" aria-label={bat?"Put down cricket bat":"Pick up cricket bat"} onClick={()=>bat?stopCricket():startCricket()}><img src="/assets/cricket-bat-real.png" alt="Cricket bat" draggable={false}/><span className="scene-label">{bat?"🏏 Bat rakh do":"🏏 Bat uthao"}</span></button>
       <button className={"hotspot cat "+(catHop?"cat-hop":"")} aria-label="Pet the cat" onClick={petCat}><img src="/assets/cat-cutout.png" alt="Billo the street cat" draggable={false}/><span className="scene-label">Pspspsps…</span></button>
@@ -202,7 +203,7 @@ export default function Home() {
       <button className="red-button" onClick={redButton}><span>ISKO MAT<br/>DABANA</span><small>☠</small></button>
       <div className="rickshaw-choices" aria-label="Choose your rickshaw destination"><span>Bhai jana kidhar hai?</span>{characters.driver.replies.slice(0,4).map(([label],i)=><button key={label} onClick={()=>reply("driver",i)}>📍 {label}</button>)}</div>
       <div className="chai-choices">{characters.chai.replies.slice(0,3).map(([label],i)=><button key={label} onClick={()=>reply("chai",i)}>{label}</button>)}</div>
-      <div className="uncle-choices">{characters.uncle.replies.slice(0,3).map(([label],i)=><button key={label} onClick={()=>reply("uncle",i)}>{label}</button>)}</div>
+      {chat!=="uncle"&&<div className="uncle-choices">{characters.uncle.replies.slice(0,3).map(([label],i)=><button key={label} onClick={()=>reply("uncle",i)}>{label}</button>)}</div>}
       {captchaVisible&&<aside className="captcha-preview"><div className="window-title"><strong>Pakistani CAPTCHA</strong><button className="captcha-dismiss" aria-label="Close CAPTCHA panel" onClick={()=>setCaptchaVisible(false)}>×</button></div><div className="captcha-body"><p>Select all the things that are more reliable than our electricity:</p><div className="captcha-grid">{[['☕','Chai'],['🛺','Rickshaw'],['☀️','Umeed'],['📶','Mobile Data'],['👤','Politicians'],['💡','Load Shedding']].map(([emoji,label])=><button key={label} onClick={e=>e.currentTarget.classList.toggle('picked')}><span>{emoji}</span>{label}</button>)}</div><button className="green-button" onClick={()=>{setCorrect(0);setSelected(null);setQuiz(0);}}>Verify kar lo yaar</button><small>100% unofficial. 200% personal.</small></div></aside>}
       <button className="horn" onClick={honk}>📣 PON PON {horns>3?'📣':''}</button>
       <button className="movable-chair" aria-label="Drag the plastic chair, or move with arrow keys" style={{transform:'translate('+chair.x+'px,'+chair.y+'px)'}} onPointerDown={e=>{e.currentTarget.setPointerCapture(e.pointerId);drag.current={x:e.clientX,y:e.clientY,ox:chair.x,oy:chair.y};}} onPointerMove={e=>{if(!drag.current)return;setChairMoved(true);setChair({x:Math.max(-1100,Math.min(100,drag.current.ox+e.clientX-drag.current.x)),y:Math.max(-470,Math.min(35,drag.current.oy+e.clientY-drag.current.y))});}} onPointerUp={()=>{drag.current=null;say('Kursi idhar rakh di. Bas. That’s it.');}} onPointerCancel={()=>drag.current=null} onKeyDown={e=>{if(!e.key.startsWith('Arrow'))return;e.preventDefault();setChairMoved(true);setChair(c=>({x:c.x+(e.key==='ArrowLeft'?-20:e.key==='ArrowRight'?20:0),y:c.y+(e.key==='ArrowUp'?-20:e.key==='ArrowDown'?20:0)}));}}><img src="/assets/chair-real.png" alt="Red plastic chair" draggable={false}/><span>{chairMoved?'Bas. That’s the joke.':'Apni kursi khud lagao ↔'}</span></button>
@@ -216,7 +217,7 @@ export default function Home() {
     </section></div>
     {music.playing&&<div className="radio-bar"><span className="equalizer" aria-hidden="true"><i/><i/><i/></span><strong>{music.names[music.track]}</strong><small>Your playlist</small><button aria-label="Next music track" onClick={music.nextTrack}>Next ↗</button><input aria-label="Music volume" type="range" min="0" max="0.7" step="0.05" value={music.volume} onChange={e=>music.setVolume(Number(e.target.value))}/><button aria-label="Pause music" onClick={music.toggle}>Ⅱ</button></div>}
     {chat&&<section className={"character-chat "+(chat==="uncle"&&uncleAngry?"angry-chat":"")} aria-label={characters[chat].name+" conversation"}><header><span className="chat-avatar">{chat==="uncle"&&uncleAngry?"😡":characters[chat].avatar}</span><div><strong>{characters[chat].name}</strong><small><i/> Online. Obviously.</small></div><button aria-label="Close conversation" onClick={()=>setChat(null)}>×</button></header><div className="chat-messages" ref={chatLog} role="log" aria-live="polite">{messages.map((message,i)=><p className={message.mine?"mine":"theirs"} key={i}>{message.text}</p>)}</div><div className="chat-replies">{characters[chat].replies.map(([label],i)=><button key={label} onClick={()=>reply(chat,i)}>{label} ↗</button>)}</div>{chat==="cat"&&<form className="cat-composer" onSubmit={e=>{e.preventDefault();messageCat();}}><input aria-label="Message the cat" placeholder="Billo ko kuch bolo…" value={catMessage} maxLength={160} onChange={e=>setCatMessage(e.target.value)}/><button type="submit" aria-label="Send message to cat" disabled={!catMessage.trim()}>➤</button></form>}<small className="chat-note">{chat==="cat"?"Billo sirf meow samajhti hai.":"Mohallay ki baat, mohallay mein."}</small></section>}
-    {musicOpen&&<MusicPlayer music={music} onClose={()=>setMusicOpen(false)}/>}
+    {musicOpen&&<MusicPlayer music={music} onClose={closePlayer}/>}
     {gossipOpen&&<MohallaGossip onClose={()=>setGossipOpen(false)}/>}
     <footer><strong>Bas Click Karo</strong><span>Proudly useless</span><span>Made in Pakistan 🇵🇰</span><span className="footer-note">For the chronically online ♥</span><span className="click-counter">{clicks} clicks. Zero kaam.</span><button onClick={()=>say('Privacy: Sab browser mein. Hum bhi kuch kaam nahi kar rahe.')}>Privacy (Shhh…)</button><button onClick={blackout}>☾</button></footer>
     <div className={'toast '+(toast?'visible':'')} role="status" aria-live="polite">{toast}</div>
